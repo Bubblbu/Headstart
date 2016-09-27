@@ -319,7 +319,7 @@ list.filterList = function (search_words) {
     if (search_words.length === 0) {
         data_circle.style("display", "block");
 
-        headstart.bubbles[headstart.current_file_number].data.forEach(function (d) {
+        headstart.current_bubble.data.forEach(function (d) {
             d.filtered_out = false;
         });
 
@@ -443,8 +443,8 @@ list.makeTitleClickable = function(d) {
             }
         });
 
-    headstart.bubbles[headstart.current_file_number].zoomin(headstart.current_circle.data()[0]);
-    headstart.bubbles[headstart.current_file_number].current = "hoverbig";
+    headstart.current_bubble.zoomin(headstart.current_circle.data()[0]);
+    headstart.current_bubble.current = "hoverbig";
     papers.mouseoverpaper();
     this.enlargeListItem(d);
     headstart.current_enlarged_paper = d;

@@ -45,7 +45,7 @@ export var HeadstartFSM = function() {
   
   this.current_zoom_node = null;
   this.current_enlarged_paper = null;
-  this.current_file_number = 1;
+  this.current_file_number = 0;
   this.current_circle = null;
   this.papers_list = null;
   this.circle_zoom = 0;
@@ -96,19 +96,7 @@ HeadstartFSM.prototype = {
     });
     },
 
-  resetBubbles: function () {
-    if(this.bubbles) {
-      delete this.bubbles;
-      this.bubbles = {};
-    }
-    
-    $.each(this.files, (index, elem) => {
-      var bubble = new BubblesFSM();
-      this.registerBubbles(bubble);
-      bubble.title = elem.title;
-      bubble.file = elem.file;
-    });
-  },
+
 
   calcChartSize: function() {
       var parent_height = getRealHeight($("#" + this.tag));
@@ -436,22 +424,23 @@ HeadstartFSM.prototype = {
   initMouseMoveListeners: function() {
     $("rect").on( "mouseover", () => {
       if (!this.is_zoomed) {
-        this.bubbles[this.current_file_number].onmouseout("notzoomedmouseout");
+        // this.current_bubble.onmouseout("notzoomedmouseout");
+        this.current_bubble.onmouseout("notzoomedmouseout");
         this.current_circle = null;
       }
-      this.bubbles[this.current_file_number].mouseout("outofbigbubble");
+      this.current_bubble.mouseout("outofbigbubble");
       this.initClickListenersForNav();
     });
   },
 
   initMouseClickListeners: function() {
       $("#chart-svg").on("click", () => {
-          this.bubbles[this.current_file_number].zoomout();
+          this.current_bubble.zoomout();
       });
 
       $("#" + this.tag).bind('click', (event) => {
         if(event.target.className === "container-headstart" || event.target.className === "vis-col" || event.target.id === "headstart-chart") {
-              this.bubbles[this.current_file_number].zoomout();
+              this.current_bubble.zoomout();
           }
       });
   },
@@ -468,55 +457,54 @@ HeadstartFSM.prototype = {
 
   // Draws the header for this
   drawTitle: function() {
-    let self = this;
-    let chart_title = "";
-    
-    if(this.subdiscipline_title === "") {
-        if (this.language === "eng") {
-            chart_title = 'Overview of <span id="num_articles"></span> articles';
-        } else {
-            chart_title = 'Überblick über <span id="num_articles"></span> Artikel';
-        }
-    } else {
-        chart_title = this.subdiscipline_title;
-    }
+      let self = this;
+      let chart_title = "";
 
-    $("#subdiscipline_title h4").html(chart_title);
-    $("#num_articles").html($(".paper").length);
+      if (this.subdiscipline_title === "") {
+          if (this.language === "eng") {
+              chart_title = 'Overview of <span id="num_articles"></span> articles';
+          } else {
+              chart_title = 'Überblick über <span id="num_articles"></span> Artikel';
+          }
+      } else {
+          chart_title = this.subdiscipline_title;
+      }
 
-    if (this.show_infolink) {
-        let infolink = ' (<a data-toggle="modal" data-type="text" href="#info_modal" id="infolink"></a>)';
-        $("#subdiscipline_title h4").append(infolink);
-        $("#infolink").text(this.localization[this.language].intro_label);
-    }
+      $("#subdiscipline_title h4").html(chart_title);
+      $("#num_articles").html($(".paper").length);
 
-    if (this.show_timeline) {
-        let link = ' <span id="timelineview"><a href="#">TimeLineView</a></span>';
-        $("#subdiscipline_title>h4").append(link);
-    }
+      if (this.show_infolink) {
+          let infolink = ' (<a data-toggle="modal" data-type="text" href="#info_modal" id="infolink"></a>)';
+          $("#subdiscipline_title h4").append(infolink);
+          $("#infolink").text(this.localization[this.language].intro_label);
+      }
 
-    if (this.show_dropdown) {
-        let dropdown = '<select id="datasets"></select>';
+      if (this.show_timeline) {
+          let link = ' <span id="timelineview"><a href="#">TimeLineView</a></span>';
+          $("#subdiscipline_title>h4").append(link);
+      }
 
-        $("#subdiscipline_title>h4").append(" Select dataset: ");
-        $("#subdiscipline_title>h4").append(dropdown);
+      let dropdown = '<select id="datasets"></select>';
 
-        $.each(this.files, (index, entry) => {
-            let current_item = '<option value="' + entry.file + '">' + entry.title + '</option>';
-            $("#datasets").append(current_item);
-        });
+      $("#subdiscipline_title>h4").append(" Select dataset: ");
+      $("#subdiscipline_title>h4").append(dropdown);
 
-        //$("#datasets " + headstart.current_file_number + ":selected").text();
-        $("#datasets").val(this.bubbles[this.current_file_number].file);
+      $.each(this.files, (index, entry) => {
+          let current_item = '<option value="' + entry.file + '">' + entry.title + '</option>';
+          $("#datasets").append(current_item);
+      });
 
-        $("#datasets").change(function() {
-            let selected_file_number = this.selectedIndex + 1;
-            if (selected_file_number !== self.current_file_number) {
-                self.tofile(selected_file_number);
-            }
-        });
-    }
-},
+      //$("#datasets " + headstart.current_file_number + ":selected").text();
+      $("#datasets").val(this.files[this.current_file_number].file);
+
+      $("#datasets").change(function() {
+          let selected_file_number = this.selectedIndex + 1;
+          if (selected_file_number !== self.current_file_number) {
+              self.tofile(selected_file_number);
+          }
+      });
+  },
+
 
 
   initForceAreas: function() {
@@ -535,7 +523,7 @@ HeadstartFSM.prototype = {
   // calls itself over and over until the forced layout of the papers
   // is established
   checkForcePapers: function() {
-    var bubble = this.bubbles[this.current_file_number];
+    var bubble = this.current_bubble;
 
     if (this.is("normal") || this.is("switchfiles")) {
       var checkPapers = window.setInterval(() => {
@@ -552,6 +540,21 @@ HeadstartFSM.prototype = {
         }
       }, 10);
     }
+  },
+
+
+  resetBubbles: function () {
+    if(this.bubbles) {
+      delete this.bubbles;
+      this.bubbles = {};
+    }
+    
+    $.each(this.files, (index, elem) => {
+      var bubble = new BubblesFSM();
+      this.registerBubbles(bubble);
+      bubble.title = elem.title;
+      bubble.file = elem.file;
+    });
   },
 
   // for the timelineview new bubbles are registered with headstart and kept
@@ -630,6 +633,7 @@ HeadstartFSM.prototype = {
       }
   },
 
+  // Only used if 'adaptive' is set
   createRestUrl: function () {
       let url = this.server_url + "services/getBookmarks.php?user=" + this.user_id;
 
@@ -651,102 +655,326 @@ HeadstartFSM.prototype = {
       return url;
   },
 
-  // FSM callbacks
-  // the start event transitions headstart from "none" to "normal" view
-  onstart: function() {
+  // // FSM callbacks
+  // // the start event transitions headstart from "none" to "normal" view
+  // onstart: function() {
+  //     this.calcChartSize();
+
+  //     this.initScales();
+
+  //     this.checkBrowserVersions();
+
+  //     this.setOverflowToHiddenOrAuto("#main");
+
+  //     this.resetBubbles();
+  //     let current_bubble = this.current_bubble;
+
+  //     // NOTE: async call
+  //     // therefore we need to call the methods which depend on bubbles.data
+  //     // after the csv has been received.
+  //     let setupVisualization = (csv) => {
+  //         this.drawTitle();
+
+  //         this.calcChartSize();
+  //         this.setScaleRanges();
+
+  //         this.drawSvg();
+  //         this.drawChartCanvas();
+  //         if (this.is_adaptive) {
+
+  //             let url = this.createRestUrl();
+
+  //             $.getJSON(url, (data) => {
+  //                 this.startVisualization(this, current_bubble, csv, data, true);
+  //             });
+  //         } else {
+  //             this.startVisualization(this, current_bubble, csv, null, true);
+  //         }
+
+  //         // Horrible solution but the first call is needed to calculate the chart height
+  //         // and this call sets the final number of articles in the viz
+  //         this.drawTitle();
+  //     };
+
+  //     switch (this.mode) {
+  //         case "local_files":
+  //             switch (this.input_format) {
+  //               case "csv":
+  //                 d3.csv(current_bubble.file, setupVisualization);
+  //                 break;
+  //               case "json":
+  //                 d3.json(current_bubble.file, setupVisualization);
+  //             }
+  //             break;
+
+  //         case "search_repos":
+  //             d3.json(this.server_url + "services/getLatestRevision.php?vis_id=" + current_bubble.file, setupVisualization);
+  //             break;
+
+  //         case "server_files":
+  //             switch (this.input_format) {
+  //               case "csv":
+  //                   $.getJSON(this.server_url + "services/staticFiles.php", (json) => {
+  //                           this.files = [];
+  //                           for (let i = 0; i < json.length; i++) {
+  //                               this.files.push({
+  //                                   "title": json[i].title,
+  //                                   "file": this.server_url + "static" + json[i].file
+  //                               });
+  //                           }
+  //                           this.resetBubbles();
+  //                           current_bubble = this.current_bubble; 
+  //                           d3.csv(current_bubble.file, setupVisualization);
+  //                       }
+  //                   });
+  //                 break;
+  //               case "json":
+  //                 d3.json(current_bubble.file, setupVisualization);
+  //                 break;
+  //             }
+  //             break;
+
+  //         case "json-direct":
+  //             setupVisualization(current_bubble.file);
+  //             break;
+
+  //         default:
+  //             break;
+  //     }
+  // },
+
+  initStuff: function() {
       this.calcChartSize();
-
       this.initScales();
-
       this.checkBrowserVersions();
-
       this.setOverflowToHiddenOrAuto("#main");
+  },
 
-      this.resetBubbles();
-      let current_bubble = this.bubbles[this.current_file_number];
-
-      // NOTE: async call
-      // therefore we need to call the methods which depend on bubbles.data
-      // after the csv has been received.
-      let setupVisualization = (csv) => {
-          this.drawTitle();
-
-          this.calcChartSize();
-          this.setScaleRanges();
-
-          this.drawSvg();
-          this.drawChartCanvas();
-          if (this.is_adaptive) {
-
-              let url = this.createRestUrl();
-
-              $.getJSON(url, (data) => {
-                  this.startVisualization(this, current_bubble, csv, data, true);
-              });
-          } else {
-              this.startVisualization(this, current_bubble, csv, null, true);
-          }
-
-          // Horrible solution but the first call is needed to calculate the chart height
-          // and this call sets the final number of articles in the viz
-          this.drawTitle();
-      };
-
+  getFiles: function() {
       switch (this.mode) {
-          case "local_files":
-              switch (this.input_format) {
-                case "csv":
-                  d3.csv(current_bubble.file, setupVisualization);
-                  break;
-                case "json":
-                  d3.json(current_bubble.file, setupVisualization);
-                  break;
-              }
+          case 'local_files':
+              this.prepareUI();
               break;
 
-          case "search_repos":
-              d3.json(this.server_url + "services/getLatestRevision.php?vis_id=" + current_bubble.file, setupVisualization);
+          case 'server_files':
+              $.getJSON(this.server_url + "services/staticFiles.php", (data) => {
+                  this.files = [];
+                  for (let i = 0; i < data.length; i++) {
+                      this.files.push({
+                          "title": data[i].title,
+                          "file": this.server_url + data[i].file
+                      });
+                  }
+                  this.prepareUI();
+              });
               break;
 
-          case "server_files":
-              switch (this.input_format) {
-                case "csv":
-                    $.ajax({
-                        type: 'POST',
-                        url: this.server_url + "services/staticFiles.php",
-                        data: "",
-                        dataType: 'JSON',
-                        success: (json) => {
-                            this.files = [];
-                            for (let i = 0; i < json.length; i++) {
-                                this.files.push({
-                                    "title": json[i].title,
-                                    "file": this.server_url + "static" + json[i].file
-                                });
-                            }
-                            this.resetBubbles();
-                            current_bubble = this.bubbles[this.current_file_number]; 
-                            d3.csv(current_bubble.file, setupVisualization);
-                        }
-                    });
-                  break;
-                case "json":
-                  d3.json(current_bubble.file, setupVisualization);
-                  break;
-              }
-              break;
+          case 'search_repos':
 
-          case "json-direct":
-              setupVisualization(current_bubble.file);
-              break;
-
-          default:
-              break;
       }
   },
 
 
-  // 'ontotimeline' transitions from Headstarts "normal" view to the timeline
+  drawDropdown: function() {
+      let dropdown = '<select id="datasets"></select>';
+
+      $("#subdiscipline_title>h4").append(" Select dataset: ");
+      $("#subdiscipline_title>h4").append(dropdown);
+
+      $.each(this.files, (index, entry) => {
+          let current_item = '<option value="' + entry.file + '">' + entry.title + '</option>';
+          $("#datasets").append(current_item);
+      });
+
+      //$("#datasets " + headstart.current_file_number + ":selected").text();
+      $("#datasets").val(this.files[this.current_file_number].file);
+
+      $("#datasets").change(function() {
+          let selected_file_number = this.selectedIndex + 1;
+          if (selected_file_number !== self.current_file_number) {
+              self.tofile(selected_file_number);
+          }
+      });
+  },
+
+  getCurrentMap: function() {
+      switch (this.input_format) {
+          case "csv":
+              d3.csv(this.files[this.current_file_number].file, (data) => {
+                  this.initBubbleFSM(data);
+                  this.drawMap();
+              });
+              break;
+
+          case "json":
+              d3.json(this.files[this.current_file_number].file, (data) => {
+                  this.initBubbleFSM(data);
+                  this.drawMap();
+              });
+              break;
+      }
+  },
+
+  initBubbleFSM: function(data) {
+      this.current_bubble = new BubblesFSM();
+      this.current_bubble.title = this.files[this.current_file_number].title;
+      this.current_bubble.file = this.files[this.current_file_number].file;
+      this.current_bubble.data = data;
+  },
+
+  drawMap: function() {
+      this.drawTitle();
+
+      this.calcChartSize();
+      this.setScaleRanges();
+
+      this.drawSvg();
+      this.drawChartCanvas();
+      this.startVisualization(this, this.current_bubble, this.current_bubble.data, null, true);
+      this.drawTitle();
+  },
+
+
+
+
+
+  // Start of Headstart in normal mode (vs timeline)
+  onstart: function() {
+      // classic init-stuff
+      // prepares scales etc for current window
+      this.initStuff();
+
+      // gets the file/files that are going to be shown (no map data yet. only current this.files array)
+      this.getFiles(); // Ajax - calls prepareUI() on success
+  },
+
+  prepareUI: function() {
+      // if multipleFiles
+      this.drawTitle();
+
+      // get the first map to be shown
+      this.getCurrentMap(); // Ajax - calls drawMap() on success
+  },
+
+  ontofile: function(event, from, to, file) {
+      // still the same inits
+      // initFileChange();
+      this.force_areas.stop();
+      this.force_papers.stop();
+
+      this.current_file_number = file;
+
+      // clear the canvas & list
+      $("#chart_canvas").remove();
+      $("#list_explorer").empty();
+
+      // popup.current = "hidden";
+      papers.current = "none";
+      list.current = "none";
+
+      // this.initScales();
+      this.setOverflowToHiddenOrAuto("#main");
+
+      this.getCurrentMap();
+  },
+
+
+  // ontofile: function(event, from, to, file) {
+  //     this.force_areas.stop();
+  //     this.force_papers.stop();
+
+  //     this.current_file_number = file;
+
+  //     // clear the canvas & list
+  //     $("#chart_canvas").remove();
+  //     $("#list_explorer").empty();
+
+  //     // popup.current = "hidden";
+  //     papers.current = "none";
+  //     list.current = "none";
+
+  //     // this.initScales();
+  //     this.setOverflowToHiddenOrAuto("#main");
+
+  //     // reset bubbles
+  //     this.resetBubbles();
+
+  //     let current_bubble = this.current_bubble;
+
+  //     var setupVisualization = (csv) => {
+  //         this.calcChartSize();
+  //         this.setScaleRanges();
+
+  //         this.drawChartCanvas();
+
+  //         if (this.is_adaptive) {
+
+  //             var url = this.createRestUrl();
+
+  //             $.getJSON(url, (data) => {
+  //                 this.startVisualization(this, current_bubble, csv, data, false);
+  //             });
+  //         } else {
+  //             this.startVisualization(this, current_bubble, csv, null, false);
+  //         }
+
+  //         this.drawTitle();
+  //     };
+
+  //     switch (this.mode) {
+  //         case "local_files":
+  //             switch (this.input_format) {
+  //                 case "csv":
+  //                     d3.csv(current_bubble.file, setupVisualization);
+  //                     break;
+  //                 case "json":
+  //                     d3.json(current_bubble.file, setupVisualization);
+  //                     break;
+  //             }
+  //             break;
+
+  //         case "search_repos":
+  //             d3.json(this.server_url + "services/getLatestRevision.php?vis_id=" + current_bubble.file, setupVisualization);
+  //             break;
+
+  //         case "server_files":
+  //             switch (this.input_format) {
+  //                 case "csv":
+  //                    $.ajax({
+  //                        type: 'POST',
+  //                        url: this.server_url + "services/staticFiles.php",
+  //                        data: "",
+  //                        dataType: 'JSON',
+  //                        success: (json) => {
+  //                            this.files = [];
+  //                            for (let i = 0; i < json.length; i++) {
+  //                                this.files.push({
+  //                                    "title": json[i].title,
+  //                                    "file": this.server_url + "static" + json[i].file
+  //                                });
+  //                            }
+  //                            this.resetBubbles();
+  //                            current_bubble = this.current_bubble;
+  //                            d3.csv(current_bubble.file, setupVisualization);
+  //                        }
+  //                    });
+  //                    break;
+  //                 case "json":
+  //                     d3.json(current_bubble.file, setupVisualization);
+  //                     break;
+  //             }
+  //             break;
+
+  //         case "json-direct":
+  //             setupVisualization(current_bubble.file);
+  //             break;
+
+  //         default:
+  //             break;
+  //     }
+  // },
+
+    // 'ontotimeline' transitions from Headstarts "normal" view to the timeline
   // view. In a nutshell:
   // 1. it requires some cleanup
   //    - objects which are no longer needed
@@ -769,7 +997,7 @@ HeadstartFSM.prototype = {
       // clear the list list
       $("#list_explorer").empty();
 
-      this.bubbles[this.current_file_number].current = "x";
+      this.current_bubble.current = "x";
       papers.current = "none";
       list.current = "none";
 
@@ -822,103 +1050,6 @@ HeadstartFSM.prototype = {
       this.initMouseListeners();
   },
 
-  
-  ontofile: function(event, from, to, file) {
-      this.force_areas.stop();
-      this.force_papers.stop();
-
-      this.current_file_number = file;
-
-      // clear the canvas & list
-      $("#chart_canvas").remove();
-      $("#list_explorer").empty();
-
-      // popup.current = "hidden";
-      papers.current = "none";
-      list.current = "none";
-
-      // this.initScales();
-      this.setOverflowToHiddenOrAuto("#main");
-
-      // reset bubbles
-      this.resetBubbles();
-
-      let current_bubble = this.bubbles[this.current_file_number];
-
-      var setupVisualization = (csv) => {
-          this.calcChartSize();
-          this.setScaleRanges();
-
-          this.drawChartCanvas();
-
-          if (this.is_adaptive) {
-
-              var url = this.createRestUrl();
-
-              $.getJSON(url, (data) => {
-                  this.startVisualization(this, current_bubble, csv, data, false);
-              });
-          } else {
-              this.startVisualization(this, current_bubble, csv, null, false);
-          }
-
-          this.drawTitle();
-      };
-
-      switch (this.mode) {
-          case "local_files":
-              switch (this.input_format) {
-                  case "csv":
-                      d3.csv(current_bubble.file, setupVisualization);
-                      break;
-                  case "json":
-                      d3.json(current_bubble.file, setupVisualization);
-                      break;
-              }
-              break;
-
-          case "search_repos":
-              d3.json(this.server_url + "services/getLatestRevision.php?vis_id=" + current_bubble.file, setupVisualization);
-              break;
-
-          case "server_files":
-              switch (this.input_format) {
-                  case "csv":
-                     $.ajax({
-                         type: 'POST',
-                         url: this.server_url + "services/staticFiles.php",
-                         data: "",
-                         dataType: 'JSON',
-                         success: (json) => {
-                             this.files = [];
-                             for (let i = 0; i < json.length; i++) {
-                                 this.files.push({
-                                     "title": json[i].title,
-                                     "file": this.server_url + "static" + json[i].file
-                                 });
-                             }
-                             this.resetBubbles();
-                             current_bubble = this.bubbles[this.current_file_number];
-                             d3.csv(current_bubble.file, setupVisualization);
-                         }
-                     });
-                     break;
-                  case "json":
-                      d3.json(current_bubble.file, setupVisualization);
-                      break;
-              }
-              break;
-
-          case "json-direct":
-              setupVisualization(current_bubble.file);
-              break;
-
-          default:
-              break;
-      }
-  },
-
-
 
   startVisualization: function(hs, bubbles, csv, adaptive_data) {
     bubbles.start( csv, adaptive_data );
@@ -947,6 +1078,7 @@ HeadstartFSM.prototype = {
     $("#area_title_object>body").dotdotdot({wrap:"letter"});
   },
 
+  // hard reload of the page
   drawNormalViewLink: function() {
       // remove event handler
       $("#timelineview").off("click");

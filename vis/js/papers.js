@@ -111,7 +111,7 @@ export const papers = StateMachine.create({
             this.shrinkPaper(d, holder_div);
           }
 
-          headstart.bubbles[headstart.current_file_number].mouseout();
+          headstart.current_bubble.mouseout();
         }
 
     }
@@ -200,7 +200,7 @@ papers.paper_click = function(d) {
                 });
 
             d3.event.stopPropagation();
-            headstart.bubbles[headstart.current_file_number].zoomin(current_node.data()[0]);
+            headstart.current_bubble.zoomin(current_node.data()[0]);
         }
     }
 };
@@ -276,7 +276,7 @@ papers.applyForce = function( bubbles ) {
           return true;
         }*/
 
-        var current_bubbles = headstart.bubbles[headstart.current_file_number];
+        var current_bubbles = headstart.current_bubble;
 
         current_bubbles.areas_array.forEach(function(a, i) {
 
@@ -314,7 +314,8 @@ papers.applyForce = function( bubbles ) {
     headstart.force_papers.on("tick", function(e) {
         var alpha = e.alpha;
 
-        var current_bubbles = headstart.bubbles[headstart.current_file_number];
+        var current_bubbles = headstart.current_bubble;
+        // var current_bubbles = headstart.current_bubble;
 
         /*if (typeof current_bubbles == 'undefined' || current_bubbles == null) {
           return true;

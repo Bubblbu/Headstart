@@ -274,7 +274,7 @@ BubblesFSM.prototype = {
   initMouseListenersForTitles: function() {
     d3.selectAll( "#area_title" ).on( "mouseover", function(d) {
       if(headstart.current != "timeline") {
-        headstart.bubbles[headstart.current_file_number].hideCircle(this);
+        headstart.current_bubble.hideCircle(this);
       } else {
         var underlying_circle =  d3.selectAll("circle")
           .filter(function (x) {
@@ -286,15 +286,15 @@ BubblesFSM.prototype = {
               }
           });
 
-        headstart.bubbles[headstart.current_file_number].resetCircleDesignTimeLine(underlying_circle[0][0]);
-        headstart.bubbles[headstart.current_file_number].highlightAllCirclesWithLike(underlying_circle[0][0]);
-        headstart.bubbles[headstart.current_file_number].drawConnectionLines(underlying_circle[0][0]);
+        headstart.current_bubble.resetCircleDesignTimeLine(underlying_circle[0][0]);
+        headstart.current_bubble.highlightAllCirclesWithLike(underlying_circle[0][0]);
+        headstart.current_bubble.drawConnectionLines(underlying_circle[0][0]);
       }
     });
 
     d3.selectAll( "#area_title" ).on( "mouseout", function() {
       if(headstart.current != "timeline") {
-        headstart.bubbles[headstart.current_file_number].showCircle(this);
+        headstart.current_bubble.showCircle(this);
       }
     });
   },
@@ -627,7 +627,7 @@ BubblesFSM.prototype = {
           headstart.zoom_finished = true;
     });
 
-    headstart.bubbles[headstart.current_file_number].createTransition(t, d.title);
+    headstart.current_bubble.createTransition(t, d.title);
 
     mediator.publish("record_action", d.id, "zoom_in", headstart.user_id, "none", null);
     // headstart.recordAction(d.id, "zoom_in", headstart.user_id, "none", null);
