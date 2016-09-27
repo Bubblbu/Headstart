@@ -410,7 +410,7 @@ BubblesFSM.prototype = {
   // current_vis_size
   positionBubbles2: function( bubbles, bubbles_id ) {
     bubbles.attr("transform", function (d) {
-      var x_pos = d.x + ((bubbles_id-1) * headstart.current_vis_size);
+      var x_pos = d.x + ((bubbles_id) * headstart.current_vis_size);
       return "translate(" + x_pos + "," + d.y + ")";
     });
   },
