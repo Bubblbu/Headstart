@@ -13,3 +13,10 @@ line {
     float: left;
     text-align: center;
 }
+
+circle {
+	&.hover_timeline {
+		fill: $okm-red;
+	    fill-opacity: 1;
+	}
+}

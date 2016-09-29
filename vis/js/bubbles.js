@@ -64,7 +64,7 @@ BubblesFSM.prototype = {
     // add class name to .circle
     for (var i = 0; i < svgCircles[0].length; i++) {
         var class_name = (this.areas_array[i].title.replace(/ /g, ''));
-        $(svgCircles[0][i]).attr("class", "area "+ class_name);
+        $(svgCircles[0][i]).addClass(class_name);
     }
   },
 
@@ -221,7 +221,7 @@ BubblesFSM.prototype = {
   makePaperClickable: function(d) {
       headstart.current_circle =  headstart.chart.selectAll("circle")
       .filter(function (x) {
-          if (d !== null) {
+          if (typeof d !== 'undefined') {
               if (headstart.use_area_uri) {
                 return x.area_uri == d.area_uri;
               } else {
@@ -272,32 +272,32 @@ BubblesFSM.prototype = {
 
   // initialize just the mousemovement listeners
   initMouseListenersForTitles: function() {
-    d3.selectAll( "#area_title" ).on( "mouseover", function(d) {
-      if(headstart.current != "timeline") {
-        headstart.current_bubble.hideCircle(this);
-      } else {
-        var underlying_circle =  d3.selectAll("circle")
-          .filter(function (x) {
-              if (d !== null) {
-                  return x.title == d.title;                
-              }
-              else {
-                  return null;
-              }
-          });
+      d3.selectAll("#area_title").on("mouseover", function(d) {
+          if (!headstart.is("timeline")) {
+              headstart.current_bubble.hideCircle(this);
+          } else {
+              var underlying_circle = d3.selectAll("circle")
+                  .filter(function(x) {
+                      if (typeof d !== 'undefined') {
+                          return x.title == d.title;
+                      } else {
+                          return null;
+                      }
+                  });
 
-        headstart.current_bubble.resetCircleDesignTimeLine(underlying_circle[0][0]);
-        headstart.current_bubble.highlightAllCirclesWithLike(underlying_circle[0][0]);
-        headstart.current_bubble.drawConnectionLines(underlying_circle[0][0]);
-      }
-    });
+              headstart.current_bubble.resetCircleDesignTimeLine(underlying_circle[0][0]);
+              headstart.current_bubble.highlightAllCirclesWithLike(underlying_circle[0][0]);
+              headstart.current_bubble.drawConnectionLines(underlying_circle[0][0]);
+          }
+      });
 
-    d3.selectAll( "#area_title" ).on( "mouseout", function() {
-      if(headstart.current != "timeline") {
-        headstart.current_bubble.showCircle(this);
-      }
-    });
+      d3.selectAll("#area_title").on("mouseout", function() {
+          if (!headstart.is("timeline")) {
+              headstart.current_bubble.showCircle(this);
+          }
+      });
   },
+
 
   // hide a cirlce
   hideCircle:  function( circle ) {
@@ -321,15 +321,18 @@ BubblesFSM.prototype = {
 
   // used for timeline view, when user hovers over one circle in a
   // time period, we want to highlight the same circle for the time period
-  highlightAllCirclesWithLike: function( circle ) {
-    var class_name = $(circle).attr("class").replace("area ", "");
-    $("." + class_name).css("fill" , "#FE642E");
-    $("." + class_name).css("fill-opacity", 1);
-    var circles = $("." + class_name);
-    for (var i=0; i<circles.length; i++) {
-      toFront(circles[i].parentNode);
-    }
+  highlightAllCirclesWithLike: function(circle) {
+      var class_name = $(circle).attr("class").replace("area ", "");
+      $("." + class_name).each((index, elem) => {
+          $(elem).addClass("hover_timeline");
+      });
+
+      var circles = $("." + class_name);
+      for (var i = 0; i < circles.length; i++) {
+          toFront(circles[i].parentNode);
+      }
   },
+
 
   // drawConnection between the circles:
   // the problem is jquery $(circles) returns the circles "unsorted".
@@ -338,12 +341,9 @@ BubblesFSM.prototype = {
   // sensible manner.
   // the sortCircle method achieves this in a rudamentary way for now.
   drawConnectionLines: function( circle ) {
-    var class_name = $(circle).attr("class").replace("area ", "");
-    var circles = $("." + class_name);
+    var circles = $(".hover_timeline");
     var sorted_circles = this.sortCircles(circles);
 
-    //<line x1="0" y1="0" x2="2" y2="2" style="stroke:rgb(0,0,0);
-    //                                         stroke-width:2" />
     for (var i = 0; i < sorted_circles.length-1; i++) {
       var circleStart = sorted_circles[i].getBoundingClientRect();
       var circleEnd = sorted_circles[i+1].getBoundingClientRect();
@@ -535,7 +535,7 @@ BubblesFSM.prototype = {
 
     var zoom_node = headstart.chart.selectAll("circle")
       .filter(function (x) {
-        if (d !== null) {
+        if (typeof d !== 'undefined') {
             return x.title == d.title;
         } else {
             return null;
@@ -564,7 +564,7 @@ BubblesFSM.prototype = {
 
     headstart.chart.selectAll("circle")
         .filter(function(x) {
-            if (d !== null) {
+            if (typeof d !== 'undefined') {
                 return (x.title != d.title);
             } else {
                 return null;
@@ -767,18 +767,17 @@ BubblesFSM.prototype = {
   },
 
   resetCircleDesignTimeLine: function() {
-      d3.selectAll("circle")
-              .style("fill" , "rgb(210, 228, 240)")
-              .style("fill-opacity" , "0.8");
+      $("circle").each((index, elem) => {
+          $(elem).removeClass("hover_timeline");
+      });
 
       d3.selectAll("#area_title_object").style("visibility", "visible");
   },
 
+
   resetCircleDesign: function() {
     if(headstart.current_circle !== null) {
-      d3.selectAll("circle")
-        .attr("class", "area")
-        .style("fill-opacity", "0.8");
+      d3.selectAll("circle").attr("class", "area");
 
       var papers = d3.selectAll(".paper")
         .filter(function (x) {
@@ -805,7 +804,6 @@ BubblesFSM.prototype = {
     }
 
     obj.selectAll("circle")
-      .style("fill-opacity", "0.8")
       .attr("r", function(d) { return d.r; })
       .attr("cx", 0)
       .attr("cy", 0);

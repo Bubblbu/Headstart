@@ -1,5 +1,7 @@
 // Headstart
 // filename: headstart.js
+
+"use strict";
 import StateMachine from 'javascript-state-machine';
 
 import config from 'config';
@@ -491,25 +493,27 @@ HeadstartFSM.prototype = {
             $("#subdiscipline_title>h4").append(link);
         }
 
-        let dropdown = '<select id="datasets"></select>';
+        if (!this.is("timeline")) {
+            let dropdown = '<select id="datasets"></select>';
 
-        $("#subdiscipline_title>h4").append(" Select dataset: ");
-        $("#subdiscipline_title>h4").append(dropdown);
+            $("#subdiscipline_title>h4").append(" Select dataset: ");
+            $("#subdiscipline_title>h4").append(dropdown);
 
-        $.each(this.files, (index, entry) => {
-            let current_item = '<option value="' + entry.file + '">' + entry.title + '</option>';
-            $("#datasets").append(current_item);
-        });
+            $.each(this.files, (index, entry) => {
+                let current_item = '<option value="' + entry.file + '">' + entry.title + '</option>';
+                $("#datasets").append(current_item);
+            });
 
-        //$("#datasets " + headstart.current_file_number + ":selected").text();
-        $("#datasets").val(this.files[this.current_file_number].file);
+            //$("#datasets " + headstart.current_file_number + ":selected").text();
+            $("#datasets").val(this.files[this.current_file_number].file);
 
-        $("#datasets").change(function() {
-            let selected_file_number = this.selectedIndex + 1;
-            if (selected_file_number !== self.current_file_number) {
-                self.tofile(selected_file_number);
-            }
-        });
+            $("#datasets").change(function() {
+                let selected_file_number = this.selectedIndex + 1;
+                if (selected_file_number !== self.current_file_number) {
+                    self.tofile(selected_file_number);
+                }
+            });
+        }
     },
 
 
@@ -681,6 +685,7 @@ HeadstartFSM.prototype = {
 
 
     drawDropdown: function() {
+    		let self = this;
         let dropdown = '<select id="datasets"></select>';
 
         $("#subdiscipline_title>h4").append(" Select dataset: ");
@@ -703,45 +708,45 @@ HeadstartFSM.prototype = {
     },
 
     getCurrentMap: function() {
-        switch (this.input_format) {
-            case "csv":
-                d3.csv(this.files[this.current_file_number].file, (data) => {
-                    this.initBubbleFSM(data, this.current_file_number);
-                    this.drawMap();
-                });
-                break;
+        if (this.is("timeline")) {
+            this.bubbles = [];
 
-            case "json":
-                d3.json(this.files[this.current_file_number].file, (data) => {
-                    this.initBubbleFSM(data, this.current_file_number);
-                    this.drawMap();
-                });
-                break;
+            $.each(this.files, (index, file) => {
+                switch (this.input_format) {
+                    case "csv":
+                        d3.csv(file.file, (data) => {
+                            this.initBubbleFSM(data, index);
+                            this.bubbles.push(this.current_bubble);
+                            this.bubbles[index].start(data);
+                        });
+                        break;
+
+                    case "json":
+                        d3.json(file.file, (data) => {
+                            this.initBubbleFSM(data, index);
+                            this.bubbles.push(this.current_bubble);
+                            this.bubbles[index].start(data);
+                        });
+                        break;
+                }
+            });
+        } else {
+            switch (this.input_format) {
+                case "csv":
+                    d3.csv(this.files[this.current_file_number].file, (data) => {
+                        this.initBubbleFSM(data, this.current_file_number);
+                        this.drawMap();
+                    });
+                    break;
+
+                case "json":
+                    d3.json(this.files[this.current_file_number].file, (data) => {
+                        this.initBubbleFSM(data, this.current_file_number);
+                        this.drawMap();
+                    });
+                    break;
+            }
         }
-    },
-
-
-    getCurrentMaps: function() {
-      this.bubbles = [];
-      for (let i = 0; i < this.files.length; i++) {
-        switch (this.input_format) {
-            case "csv":
-                d3.csv(this.files[i].file, (data) => {
-                    this.initBubbleFSM(data, i);
-                    this.bubbles.push(this.current_bubble);
-                    this.bubbles[i].start(data);
-                });
-                break;
-
-            case "json":
-                d3.json(this.files[i].file, (data) => {
-                    this.initBubbleFSM(data, i);
-                    this.bubbles.push(this.current_bubble);
-                    this.bubbles[i].start(data);
-                });
-                break;
-        }
-      };
     },
 
     initBubbleFSM: function(data, id) {
@@ -764,16 +769,6 @@ HeadstartFSM.prototype = {
         this.drawTitle();
     },
 
-    // Start of Headstart in normal mode (vs timeline)
-    onstart: function() {
-        // classic init-stuff
-        // prepares scales etc for current window
-        this.initCanvas();
-
-        // gets the file/files that are going to be shown (no map data yet. only current this.files array)
-        this.getFiles(); // Ajax - calls prepareUI() on success
-    },
-
     prepareUI: function() {
         if (this.is('timeline')) {
             this.drawTitle();
@@ -792,18 +787,24 @@ HeadstartFSM.prototype = {
             $("#main").css("overflow", "auto");
             this.drawGrid();
             this.initMouseListeners();
-
-            this.getCurrentMaps();
-
         } else {
             // if multipleFiles
-            this.drawTitle();
-
-            // get the first map to be shown
-            this.getCurrentMap(); // Ajax - calls drawMap() on success        
+            this.drawTitle();        
         }
+
+        // get the first map to be shown
+        this.getCurrentMap(); // Ajax - calls drawMap() on success
     },
 
+
+    // Start of Headstart in normal mode (vs timeline)
+    onstart: function() {
+        // prepares scales etc for current window
+        this.initCanvas();
+
+        // gets the file/files that are going to be shown (no map data yet. only current this.files array)
+        this.getFiles(); // Ajax - calls prepareUI() on success
+    },
 
     ontofile: function(event, from, to, file) {
         // still the same inits
