@@ -281,7 +281,7 @@ HeadstartFSM.prototype = {
 
             this.calcChartSize();
             this.setScaleRanges();
-            this.drawSvg(true);
+            this.drawSvg();
             this.updateChartCanvas();
             list.fit_list_height();
 
@@ -454,7 +454,6 @@ HeadstartFSM.prototype = {
         });
     },
 
-
     initClickListenersForNav: function() {
         $("#timelineview").on("click", () => {
             if ($("#timelineview a").html() === "TimeLineView") {
@@ -515,8 +514,6 @@ HeadstartFSM.prototype = {
             });
         }
     },
-
-
 
     initForceAreas: function() {
         let padded = this.current_vis_size - this.padding;
@@ -783,12 +780,11 @@ HeadstartFSM.prototype = {
             this.drawChartCanvas();
 
             this.drawGridTitles(true);
-            d3.select("#headstart-chart").attr("overflow-x", "scroll");
+            $("#headstart-chart").css("overflow-x", "scroll");
             $("#main").css("overflow", "auto");
             this.drawGrid();
             this.initMouseListeners();
         } else {
-            // if multipleFiles
             this.drawTitle();        
         }
 
