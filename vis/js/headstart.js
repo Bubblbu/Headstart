@@ -281,7 +281,7 @@ HeadstartFSM.prototype = {
 
             this.calcChartSize();
             this.setScaleRanges();
-            this.drawSvg(true);
+            this.drawSvg();
             this.updateChartCanvas();
             list.fit_list_height();
 
@@ -454,7 +454,6 @@ HeadstartFSM.prototype = {
         });
     },
 
-
     initClickListenersForNav: function() {
         $("#timelineview").on("click", () => {
             if ($("#timelineview a").html() === "TimeLineView") {
@@ -508,15 +507,13 @@ HeadstartFSM.prototype = {
             $("#datasets").val(this.files[this.current_file_number].file);
 
             $("#datasets").change(function() {
-                let selected_file_number = this.selectedIndex + 1;
+                let selected_file_number = this.selectedIndex;
                 if (selected_file_number !== self.current_file_number) {
                     self.tofile(selected_file_number);
                 }
             });
         }
     },
-
-
 
     initForceAreas: function() {
         let padded = this.current_vis_size - this.padding;
@@ -685,7 +682,7 @@ HeadstartFSM.prototype = {
 
 
     drawDropdown: function() {
-    		let self = this;
+    	let self = this;
         let dropdown = '<select id="datasets"></select>';
 
         $("#subdiscipline_title>h4").append(" Select dataset: ");
@@ -758,13 +755,8 @@ HeadstartFSM.prototype = {
     },
 
     drawMap: function() {
-        this.drawTitle();
-
-        this.calcChartSize();
-        this.setScaleRanges();
-
         this.drawSvg();
-        this.drawChartCanvas();
+        this.drawChartCanvas(); 
         this.startVisualization(this, this.current_bubble, this.current_bubble.data, null, true);
         this.drawTitle();
     },
@@ -783,13 +775,14 @@ HeadstartFSM.prototype = {
             this.drawChartCanvas();
 
             this.drawGridTitles(true);
-            d3.select("#headstart-chart").attr("overflow-x", "scroll");
+            $("#headstart-chart").css("overflow-x", "scroll");
             $("#main").css("overflow", "auto");
             this.drawGrid();
             this.initMouseListeners();
         } else {
-            // if multipleFiles
-            this.drawTitle();        
+            this.drawTitle();
+            this.calcChartSize();
+            this.setScaleRanges();   
         }
 
         // get the first map to be shown

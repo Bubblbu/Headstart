@@ -4,22 +4,22 @@ circle {
     stroke: $dark-blue;
     stroke-width: 1px;
 
-    &.zoom_unselected {
+    &.area {
+        fill-opacity: .9;
+
+            &.zoom_selected {
+        fill-opacity: 1;
+        stroke-width: 2px;
+    }
+
+        &.zoom_unselected {
         fill: $dark-blue;
         fill-opacity: .1;
         stroke-width: 0;
         cursor: auto;
     }
 
-    &.zoom_selected {
-        fill-opacity: 1;
-        fill: $lightest-blue;
-        stroke-width: 2px;
-    }
 
-    &.area {
-        fill: $light-blue;
-        fill-opacity: .9;
     }
 }
 

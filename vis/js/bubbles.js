@@ -314,8 +314,7 @@ BubblesFSM.prototype = {
 
   // highlight a cirlce
   highlightCircle:  function( circle ) {
-    circle.attr("class", "zoom_selected");
-    circle.style("fill-opacity", 1);
+    $(circle[0]).addClass("zoom_selected");
   },
 
 
@@ -559,8 +558,7 @@ BubblesFSM.prototype = {
       .on("mouseout", null);
 
     headstart.chart.selectAll("circle")
-      .attr("class", "zoom_selected")
-      .style("fill-opacity", "1");
+      .attr("class", "zoom_selected");
 
     headstart.chart.selectAll("circle")
         .filter(function(x) {
@@ -571,7 +569,6 @@ BubblesFSM.prototype = {
             }
         })
         .attr("class", "zoom_unselected")
-        .style("fill-opacity", 0.1)
         .on("mouseover", null)
         .on("mouseout", null);
 
@@ -777,7 +774,7 @@ BubblesFSM.prototype = {
 
   resetCircleDesign: function() {
     if(headstart.current_circle !== null) {
-      d3.selectAll("circle").attr("class", "area");
+      $("circle").addClass("area").removeClass("zoom_unselected zoom_selected");
 
       var papers = d3.selectAll(".paper")
         .filter(function (x) {
