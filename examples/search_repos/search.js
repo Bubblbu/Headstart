@@ -18,6 +18,11 @@ switch (data_config.service) {
         service_name = "DOAJ";
         options = options_doaj;
         break;
+    case 'promed':
+        service_url = data_config.server_url + "services/searchPromed.php"
+        service_name = "Promed";
+        options = options_pubmed;
+        break; 
 }
 
 $(window).bind("pageshow", function () {

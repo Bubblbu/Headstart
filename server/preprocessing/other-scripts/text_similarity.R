@@ -25,6 +25,9 @@ switch(service,
        doaj={
         source('../other-scripts/doaj.R')   
        },
+       promed={
+        source('../other-scripts/promed.R')
+       },
       {
         source("../other-scripts/rplos_fast.R")
       }
@@ -36,11 +39,15 @@ MAX_CLUSTERS = 15
 
 print("inhere")
 
-if(!is.null(params_file) && !is.na(params_file)) {
-  params <- fromJSON(params_file)
-} else {
-  params <- NULL
-}
+if(service == "promed") {
+  params = "temp"
+  } else {    
+    if(!is.null(params_file) && !is.na(params_file)) {
+      params <- fromJSON(params_file)
+    } else {
+      params <- NULL
+    }
+  } 
 
 print("reading stuff")
 print(params)
