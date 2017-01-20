@@ -2,9 +2,9 @@ var data_config = {
     tag: "visualization",
     mode: "search_repos",
     
-    server_url: "http://localhost/project-website/search/server/",
+    server_url: "http://localhost/headstart/server/",
 
-    service: "plos",
+    service: "promed",
 
     title: "",
     base_unit: "citations",

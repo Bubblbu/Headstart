@@ -9,7 +9,7 @@ get_papers <- function(query, params = NULL, limit = 100) {
 
 	library(lubridate)
 
-	raw = read.csv("/var/www/html/headstart/server/static/data/latest_100_promedmails.csv.csv", sep=",", header = F, stringsAsFactors=FALSE)
+	raw = read.csv("/var/www/html/headstart/server/static/data/latest_100_promedmails.csv", sep=",", header = F, stringsAsFactors=FALSE)
 	dedup = raw[!duplicated(raw[,1]),]
 
 	text = dedup[c('V1','V4')]
